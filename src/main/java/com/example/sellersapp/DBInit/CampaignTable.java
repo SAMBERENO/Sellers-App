@@ -48,59 +48,41 @@ public class CampaignTable {
 
     public CampaignTable() {}
 
-    public String getCampaignName() {
-        return campaignName;
-    }
-
-    public void setCampaignName(String campaignName) {
+    public CampaignTable(String campaignName, Set<String> keywords, Integer bidMin, Double campaignFund, Boolean status, String town, Integer radius) {
         this.campaignName = campaignName;
-    }
-
-    public Set<String> getKeywords() {
-        return keywords;
-    }
-
-    public void setKeywords(Set<String> keywords) {
         this.keywords = keywords;
-    }
-
-    public Integer getBidMin() {
-        return bidMin;
-    }
-
-    public void setBidMin(Integer bidMin) {
         this.bidMin = bidMin;
-    }
-
-    public Double getCampaignFund() {
-        return campaignFund;
-    }
-
-    public void setCampaignFund(Double campaignFund) {
         this.campaignFund = campaignFund;
-    }
-
-    public Boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(Boolean status) {
         this.status = status;
-    }
-
-    public String getTown() {
-        return town;
-    }
-
-    public void setTown(String town) {
         this.town = town;
-    }
-
-    public Integer getRadius() {
-        return radius;
-    }
-
-    public void setRadius(Integer radius) {
         this.radius = radius;
     }
+
+    public String getCampaignName() { return campaignName; }
+
+    public void setCampaignName(String campaignName) { this.campaignName = campaignName; }
+
+    public Set<String> getKeywords() { return keywords; }
+
+    public void setKeywords(Set<String> keywords) { this.keywords = keywords; }
+
+    public Integer getBidMin() { return bidMin; }
+
+    public void setBidMin(Integer bidMin) { this.bidMin = bidMin; }
+
+    public Double getCampaignFund() { return campaignFund; }
+
+    public void setCampaignFund(Double campaignFund) { this.campaignFund = campaignFund; }
+
+    public Boolean getStatus() { return status; }
+
+    public void setStatus(Boolean status) { this.status = status; }
+
+    public String getTown() { return town; }
+
+    public void setTown(String town) { this.town = town; }
+
+    public Integer getRadius() { return radius; }
+
+    public void setRadius(Integer radius) { this.radius = radius; }
 }

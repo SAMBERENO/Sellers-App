@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Set;
 
-public interface CampaignRepository extends JpaRepository<CampaignTable, Long> {
+public interface CampaignRepository extends JpaRepository<CampaignTable, String> {
 
     List<CampaignTable> findByCampaignName(String campaignName);
 
