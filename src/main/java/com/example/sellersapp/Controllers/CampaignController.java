@@ -2,22 +2,24 @@ package com.example.sellersapp.Controllers;
 
 import com.example.sellersapp.DBInit.CampaignTable;
 import com.example.sellersapp.Repos.CampaignRepository;
+import com.example.sellersapp.Repos.PrePopulatedKeyWords;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/Controller")
 public class CampaignController {
 
     @Autowired
-    CampaignRepository campaignRepository;
+    private  CampaignRepository campaignRepository;
+
+    @Autowired
+    private PrePopulatedKeyWords keywords;
 
     @GetMapping("/Campaigns")
     public ResponseEntity<List<CampaignTable>> getAllCampaigns(@RequestParam(required = false) String title){
@@ -59,6 +61,31 @@ public class CampaignController {
         } else {
             return new ResponseEntity<>(campaigns, HttpStatus.OK);
         }
+    }
+
+    @GetMapping("/Campaigns/keywords")
+    public ResponseEntity<Set<String>> getPrePopulated(){
+        return new ResponseEntity<>(keywords.getKeywords(), HttpStatus.OK);
+    }
+
+    @GetMapping("/Campaigns/keywords/suggest")
+    public ResponseEntity<Set<String>> getSuggestedKeywords(@RequestParam(name = "keyword") String keyword){
+        String trimmed = keyword.trim().toLowerCase();
+
+        if (trimmed.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Set<String> allKeywords = keywords.getKeywords();
+        Set<String> result = new HashSet<>();
+
+        for (String word : allKeywords) {
+            if (word.toLowerCase().contains(trimmed)) {
+                result.add(word);
+            }
+        }
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PostMapping("/Campaigns")
