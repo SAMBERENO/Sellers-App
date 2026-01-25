@@ -2,8 +2,8 @@ package com.example.sellersapp.Repos;
 
 import com.example.sellersapp.DBInit.CampaignTable;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.List;
-import java.util.Set;
 
 public interface CampaignRepository extends JpaRepository<CampaignTable, String> {
 

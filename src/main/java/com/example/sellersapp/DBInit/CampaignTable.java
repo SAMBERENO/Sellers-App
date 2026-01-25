@@ -2,9 +2,6 @@ package com.example.sellersapp.DBInit;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,34 +11,28 @@ import java.util.Set;
 public class CampaignTable {
 
     @Id
-    @NotBlank
     @Column(name = "campaign_name")
     private String campaignName;
 
     @ElementCollection
-    @NotEmpty
     @CollectionTable(name = "campaign_keywords", joinColumns = @JoinColumn(name = "campaign_name"))
     @Column(name = "keyword")
     private Set<String> keywords = new HashSet<>();
 
-    @NotNull
     @Min(value = 1, message = "Provide minimum bid that's at least 1")
     @Column(name = "bid_min")
     private Integer bidMin;
 
-    @NotNull
     @Min(value = 0, message = "Campaign fund must be positive")
     @Column(name = "campaign_fund")
     private Double campaignFund;
 
-    @NotNull
     @Column(name = "status")
     private Boolean status;
 
     @Column(name = "town")
     private String town;
 
-    @NotNull
     @Min(value = 1, message = "Provide radius")
     @Column(name = "radius")
     private Integer radius;

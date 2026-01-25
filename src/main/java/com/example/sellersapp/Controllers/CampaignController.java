@@ -3,7 +3,9 @@ package com.example.sellersapp.Controllers;
 import com.example.sellersapp.DBInit.CampaignTable;
 import com.example.sellersapp.Repos.CampaignRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -27,7 +29,6 @@ public class CampaignController {
             else
                 campaignRepository.findByCampaignName(title).forEach(campaigns::add);
 
-            //TODO: ZOSTAWIĆ NA KONIEC
             if (campaigns.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
@@ -46,6 +47,17 @@ public class CampaignController {
             return new ResponseEntity<>(campaignData.get(), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/Campaigns/key/{keyword}")
+    public ResponseEntity<List<CampaignTable>> getCampaignsByKeyword(@PathVariable("keyword") String _keyword){
+        List<CampaignTable> campaigns = campaignRepository.findByKeywords(_keyword);
+
+        if (campaigns.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(campaigns, HttpStatus.OK);
         }
     }
 
