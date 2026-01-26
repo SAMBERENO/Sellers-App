@@ -21,6 +21,8 @@ public class CampaignController {
     @Autowired
     private PrePopulatedKeyWords keywords;
 
+    private double accountBalance = 10000.00;
+
     @GetMapping("/Campaigns")
     public ResponseEntity<List<CampaignTable>> getAllCampaigns(@RequestParam(required = false) String title){
         try {
@@ -142,6 +144,26 @@ public class CampaignController {
         }
     }
 
+    @GetMapping("/balance")
+    public ResponseEntity<Map<String, Double>> getBalance(){
+        Map<String, Double> response = new HashMap<>();
+        response.put("balance", accountBalance);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
+    @PostMapping("/balance/deduct")
+    public ResponseEntity<Map<String, Double>> deductBalance(@RequestBody Map<String, Double> request){
+        Double amount = request.get("amount");
+        if (amount == null || amount <= 0) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        if (accountBalance < amount) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        accountBalance -= amount;
+        Map<String, Double> response = new HashMap<>();
+        response.put("balance", accountBalance);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 }

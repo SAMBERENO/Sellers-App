@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SellersApp</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        input, select, button { margin: 4px 0; padding: 6px; width: 250px; }
+        table { border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 6px 10px; }
+        .chip { display: inline-block; padding: 4px 8px; background: #ddd; margin: 2px; cursor: pointer; }
+        .suggestions div { cursor: pointer; padding: 4px; background: #eee; }
+        .suggestions div:hover { background: #ccc; }
+    </style>
+</head>
+<body>
+
+<h2>Campaigns</h2>
+
+<div style="background: #e8f5e9; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+    <strong>Emerald Account Balance: $<span id="accountBalance">0.00</span></strong>
+</div>
+
+<table id="campaignTable">
+    <thead>
+    <tr>
+        <th>Name</th><th>Keywords</th><th>Bid</th><th>Fund</th>
+        <th>Status</th><th>Town</th><th>Radius</th><th>Actions</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<hr>
+
+<h3>Add / Edit Campaign</h3>
+
+<input id="name" placeholder="Campaign name"><br>
+
+<input id="keywordInput" placeholder="Add keyword">
+<div id="suggestions" class="suggestions"></div>
+<div id="selectedKeywords"></div><br>
+
+<input id="bid" type="number" placeholder="Bid amount"><br>
+<input id="fund" type="number" placeholder="Campaign fund"><br>
+
+<select id="status">
+    <option value="">Status</option>
+    <option value="true">ON</option>
+    <option value="false">OFF</option>
+</select><br>
+
+<select id="town">
+    <option value="">Town</option>
+    <option>London</option>
+    <option>Manchester</option>
+    <option>Leeds</option>
+    <option>Liverpool</option>
+</select><br>
+
+<input id="radius" type="number" placeholder="Radius (km)"><br>
+
+<button onclick="saveCampaign()">Save</button>
+<button onclick="resetForm()">Clear</button>
+
+<script>
+    let allKeywords = [];
+    let selected = [];
+    let editingName = null;
+    let accountBalance = 0;
+
+    function loadBalance() {
+        fetch('/Controller/balance')
+            .then(r => r.json())
+            .then(data => {
+                accountBalance = data.balance;
+                updateBalanceDisplay();
+            });
+    }
+
+    function updateBalanceDisplay() {
+        document.getElementById('accountBalance').innerText = accountBalance.toFixed(2);
+    }
+
+    loadBalance();
+
+    fetch('/Controller/Campaigns/keywords')
+        .then(r => r.json())
+        .then(data => allKeywords = data);
+
+    function loadCampaigns() {
+        fetch('/Controller/Campaigns')
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.querySelector('#campaignTable tbody');
+                tbody.innerHTML = '';
+                data.forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+          <td>${c.campaignName}</td>
+          <td>${c.keywords.join(', ')}</td>
+          <td>${c.bidMin}</td>
+          <td>${c.campaignFund}</td>
+          <td>${c.status}</td>
+          <td>${c.town}</td>
+          <td>${c.radius}</td>
+          <td>
+            <button onclick='editCampaign(${JSON.stringify(c)})'>Edit</button>
+            <button onclick='deleteCampaign("${c.campaignName}")'>Delete</button>
+          </td>`;
+                    tbody.appendChild(tr);
+                });
+            });
+    }
+
+    loadCampaigns();
+
+    document.getElementById('keywordInput').addEventListener('input', e => {
+        const val = e.target.value.trim();
+        const box = document.getElementById('suggestions');
+        box.innerHTML = '';
+        if (!val) return;
+
+        fetch('/Controller/Campaigns/keywords/suggest?keyword=' + val)
+            .then(r => r.json())
+            .then(data => {
+                data.forEach(k => {
+                    if (!selected.includes(k)) {
+                        const div = document.createElement('div');
+                        div.innerText = k;
+                        div.onclick = () => addKeyword(k);
+                        box.appendChild(div);
+                    }
+                });
+            });
+    });
+
+    function addKeyword(k) {
+        selected.push(k);
+        renderSelected();
+        document.getElementById('keywordInput').value = '';
+        document.getElementById('suggestions').innerHTML = '';
+    }
+
+    function renderSelected() {
+        const box = document.getElementById('selectedKeywords');
+        box.innerHTML = '';
+        selected.forEach(k => {
+            const span = document.createElement('span');
+            span.className = 'chip';
+            span.innerText = k + ' ✖';
+            span.onclick = () => {
+                selected = selected.filter(x => x !== k);
+                renderSelected();
+            };
+            box.appendChild(span);
+        });
+    }
+
+    function saveCampaign() {
+        const name = document.getElementById('name').value;
+        const bid = document.getElementById('bid').value;
+        const fund = document.getElementById('fund').value;
+        const status = document.getElementById('status').value;
+        const town = document.getElementById('town').value;
+        const radius = document.getElementById('radius').value;
+
+        if (!name || selected.length < 1 || !bid || !fund || !status || !town || !radius) {
+            alert('Fill all fields and select at least 1 keyword');
+            return;
+        }
+
+        const fundAmount = parseFloat(fund);
+
+        if (!editingName && fundAmount > accountBalance) {
+            alert('Insufficient funds! Your current balance is $' + accountBalance.toFixed(2));
+            return;
+        }
+
+        const obj = {
+            campaignName: name,
+            keywords: selected,
+            bidMin: parseInt(bid),
+            campaignFund: fundAmount,
+            status: status === 'true',
+            town: town,
+            radius: parseInt(radius)
+        };
+
+        const method = editingName ? 'PUT' : 'POST';
+        const url = editingName
+            ? '/Controller/Campaigns/' + editingName
+            : '/Controller/Campaigns';
+
+        fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(obj)
+        }).then(() => {
+            if (!editingName) {
+                fetch('/Controller/balance/deduct', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: fundAmount })
+                }).then(r => r.json())
+                  .then(data => {
+                      accountBalance = data.balance;
+                      updateBalanceDisplay();
+                  });
+            }
+            resetForm();
+            loadCampaigns();
+        });
+    }
+
+    function editCampaign(c) {
+        editingName = c.campaignName;
+        document.getElementById('name').value = c.campaignName;
+        document.getElementById('bid').value = c.bidMin;
+        document.getElementById('fund').value = c.campaignFund;
+        document.getElementById('status').value = c.status;
+        document.getElementById('town').value = c.town;
+        document.getElementById('radius').value = c.radius;
+        selected = [...c.keywords];
+        renderSelected();
+    }
+
+    function deleteCampaign(name) {
+        fetch('/Controller/Campaigns/' + name, { method: 'DELETE' })
+            .then(() => loadCampaigns());
+    }
+
+    function resetForm() {
+        editingName = null;
+        selected = [];
+        renderSelected();
+        document.querySelectorAll('input').forEach(i => i.value = '');
+        document.getElementById('status').value = '';
+        document.getElementById('town').value = '';
+    }
+</script>
+
+</body>
+</html>
