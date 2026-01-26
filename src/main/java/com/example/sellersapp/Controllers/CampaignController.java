@@ -122,6 +122,10 @@ public class CampaignController {
     @DeleteMapping("/Campaigns/{campaignName}")
     public ResponseEntity<HttpStatus> deleteCampaigns(@PathVariable("campaignName") String campaignName) {
         try {
+            Optional<CampaignTable> campaignData = campaignRepository.findById(campaignName);
+            if (campaignData.isPresent()) {
+                accountBalance += campaignData.get().getCampaignFund();
+            }
             campaignRepository.deleteById(campaignName);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {

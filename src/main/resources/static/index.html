@@ -227,7 +227,10 @@
 
     function deleteCampaign(name) {
         fetch('/Controller/Campaigns/' + name, { method: 'DELETE' })
-            .then(() => loadCampaigns());
+            .then(() => {
+                loadCampaigns();
+                loadBalance();
+            });
     }
 
     function resetForm() {
