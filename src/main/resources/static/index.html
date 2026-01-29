@@ -196,7 +196,16 @@
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(obj)
-        }).then(() => {
+        }).then(response => {
+            if (!response.ok) {
+                if (editingName) {
+                    alert('Insufficient funds! Account balance would drop below 0.');
+                } else {
+                    alert('Failed to create campaign. Please check your inputs.');
+                }
+                return;
+            }
+
             if (!editingName) {
                 fetch('/Controller/balance/deduct', {
                     method: 'POST',
@@ -206,10 +215,14 @@
                   .then(data => {
                       accountBalance = data.balance;
                       updateBalanceDisplay();
+                      resetForm();
+                      loadCampaigns();
                   });
+            } else {
+                loadBalance();
+                resetForm();
+                loadCampaigns();
             }
-            resetForm();
-            loadCampaigns();
         });
     }
 

@@ -11,13 +11,14 @@ import java.util.*;
 @Service
 public class CampaignService {
 
-    @Autowired
-    private PrePopulatedKeyWords keywords;
+
+    private final PrePopulatedKeyWords keywords;
 
     private final CampaignRepository campaignRepository;
 
-    public CampaignService(CampaignRepository campaignRepository) {
+    public CampaignService(CampaignRepository campaignRepository, PrePopulatedKeyWords keywords) {
         this.campaignRepository = campaignRepository;
+        this.keywords = keywords;
     }
 
 

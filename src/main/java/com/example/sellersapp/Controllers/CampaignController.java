@@ -90,8 +90,15 @@ public class CampaignController {
         Optional<CampaignTable> campaignData = campaignRepository.findById(campaignName);
 
         if (campaignData.isPresent()) {
+            double oldFund = campaignData.get().getCampaignFund();
             campaignService.updateCampaign(campaignData, campaignTable);
-            return new ResponseEntity<>(campaignRepository.save(campaignService.updateCampaign(campaignData, campaignTable)), HttpStatus.OK);
+            double fundDifference = campaignTable.getCampaignFund() - oldFund;
+            if (accountBalance - fundDifference >= 0) {
+                accountBalance -= fundDifference;
+                return new ResponseEntity<>(campaignRepository.save(campaignService.updateCampaign(campaignData, campaignTable)), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
