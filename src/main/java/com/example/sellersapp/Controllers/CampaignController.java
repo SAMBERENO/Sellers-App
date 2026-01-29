@@ -3,6 +3,7 @@ package com.example.sellersapp.Controllers;
 import com.example.sellersapp.DBInit.CampaignTable;
 import com.example.sellersapp.Repos.CampaignRepository;
 import com.example.sellersapp.Repos.PrePopulatedKeyWords;
+import com.example.sellersapp.Services.CampaignService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,23 +22,16 @@ public class CampaignController {
     @Autowired
     private PrePopulatedKeyWords keywords;
 
+    @Autowired
+    private  CampaignService campaignService;
+
     private double accountBalance = 10000.00;
 
     @GetMapping("/Campaigns")
-    public ResponseEntity<List<CampaignTable>> getAllCampaigns(@RequestParam(required = false) String title){
+    public ResponseEntity<List<CampaignTable>> getAllCampaigns(){
         try {
-            List<CampaignTable> campaigns = new ArrayList<CampaignTable>();
-
-            if (title == null)
-                campaignRepository.findAll().forEach(campaigns::add);
-            else
-                campaignRepository.findByCampaignName(title).forEach(campaigns::add);
-
-            if (campaigns.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
-            return new ResponseEntity<>(campaigns, HttpStatus.OK);
+            campaignService.getAllCampaigns();
+            return new ResponseEntity<>(campaignService.getAllCampaigns(), HttpStatus.OK);
         } catch (Exception e){
             return new ResponseEntity<>((HttpHeaders) null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -77,17 +71,8 @@ public class CampaignController {
         if (trimmed.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-
-        Set<String> allKeywords = keywords.getKeywords();
-        Set<String> result = new HashSet<>();
-
-        for (String word : allKeywords) {
-            if (word.toLowerCase().contains(trimmed)) {
-                result.add(word);
-            }
-        }
-
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        campaignService.getSuggestedKeywords(trimmed);
+        return new ResponseEntity<>(campaignService.getSuggestedKeywords(trimmed), HttpStatus.OK);
     }
 
     @PostMapping("/Campaigns")
@@ -105,15 +90,8 @@ public class CampaignController {
         Optional<CampaignTable> campaignData = campaignRepository.findById(campaignName);
 
         if (campaignData.isPresent()) {
-            CampaignTable _campaignTable = campaignData.get();
-            _campaignTable.setCampaignName(campaignTable.getCampaignName());
-            _campaignTable.setKeywords(campaignTable.getKeywords());
-            _campaignTable.setBidMin(campaignTable.getBidMin());
-            _campaignTable.setCampaignFund(campaignTable.getCampaignFund());
-            _campaignTable.setStatus(campaignTable.getStatus());
-            _campaignTable.setTown(campaignTable.getTown());
-            _campaignTable.setRadius(campaignTable.getRadius());
-        return new ResponseEntity<>(campaignRepository.save(_campaignTable), HttpStatus.OK);
+            campaignService.updateCampaign(campaignData, campaignTable);
+            return new ResponseEntity<>(campaignRepository.save(campaignService.updateCampaign(campaignData, campaignTable)), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -130,21 +108,6 @@ public class CampaignController {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("Campaigns/statuson")
-    public ResponseEntity<List<CampaignTable>> getAllActiveCampaigns(){
-        try{
-            List<CampaignTable> activeCampaigns = campaignRepository.findByStatus(true);
-
-            if (activeCampaigns.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
-            return new ResponseEntity<>(activeCampaigns, HttpStatus.OK);
-        } catch (Exception e){
-            return new ResponseEntity<>((HttpHeaders) null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
